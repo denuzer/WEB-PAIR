@@ -20,10 +20,10 @@ function removeFile(FilePath) {
 
 router.get('/', async (req, res) => {
     let num = req.query.number;
-    async function DanuwaPair() {
+    async function denuPair() {
         const { state, saveCreds } = await useMultiFileAuthState(`./session`);
         try {
-            let DanuwaPairWeb = makeWASocket({
+            let denuPairWeb = makeWASocket({
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
@@ -33,25 +33,25 @@ router.get('/', async (req, res) => {
                 browser: Browsers.macOS("Safari"),
             });
 
-            if (!DanuwaPairWeb.authState.creds.registered) {
+            if (!denuPairWeb.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
-                const code = await DanuwaPairWeb.requestPairingCode(num);
+                const code = await denuPairWeb.requestPairingCode(num);
                 if (!res.headersSent) {
                     await res.send({ code });
                 }
             }
 
-            DanuwaPairWeb.ev.on('creds.update', saveCreds);
-            DanuwaPairWeb.ev.on("connection.update", async (s) => {
+            denuPairWeb.ev.on('creds.update', saveCreds);
+            denuPairWeb.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
                 if (connection === "open") {
                     try {
                         await delay(10000);
-                        const sessionDanuwa = fs.readFileSync('./session/creds.json');
+                        const sessiondenu = fs.readFileSync('./session/creds.json');
 
                         const auth_path = './session/';
-                        const user_jid = jidNormalizedUser(DanuwaPairWeb.user.id);
+                        const user_jid = jidNormalizedUser(denuPairWeb.user.id);
 
                       function randomMegaId(length = 6, numberLength = 4) {
                       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -69,12 +69,12 @@ router.get('/', async (req, res) => {
 
                         const sid = string_session;
 
-                        const dt = await DanuwaPairWeb.sendMessage(user_jid, {
+                        const dt = await denuPairWeb.sendMessage(user_jid, {
                             text: sid
                         });
 
                     } catch (e) {
-                        exec('pm2 restart danuwa');
+                        exec('pm2 restart denu');
                     }
 
                     await delay(100);
@@ -82,25 +82,25 @@ router.get('/', async (req, res) => {
                     process.exit(0);
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
                     await delay(10000);
-                    DanuwaPair();
+                    denuPair();
                 }
             });
         } catch (err) {
-            exec('pm2 restart danuwa-md');
+            exec('pm2 restart denu-md');
             console.log("service restarted");
-            DanuwaPair();
+            denuPair();
             await removeFile('./session');
             if (!res.headersSent) {
                 await res.send({ code: "Service Unavailable" });
             }
         }
     }
-    return await DanuwaPair();
+    return await denuPair();
 });
 
 process.on('uncaughtException', function (err) {
     console.log('Caught exception: ' + err);
-    exec('pm2 restart danuwa');
+    exec('pm2 restart denu');
 });
 
 
